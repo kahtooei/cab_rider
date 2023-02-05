@@ -5,10 +5,6 @@ import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 
 void main() async {
-  // await Firebase.initializeApp(
-  //   options: DefaultFirebaseOptions.currentPlatform,
-  // );
-
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -25,6 +21,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        fontFamily: 'Regular-Font',
         primarySwatch: Colors.blue,
       ),
       home: const MainScreen(),
