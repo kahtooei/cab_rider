@@ -1,12 +1,21 @@
 import 'package:cab_rider/core/utils/colors.dart';
 import 'package:cab_rider/core/utils/page_routes.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+  LoginScreen({super.key});
+
+  final _txtEmailControlle = TextEditingController();
+  final _txtPasswordControlle = TextEditingController();
+
+  late BuildContext _context;
 
   @override
   Widget build(BuildContext context) {
+    _context = context;
     return Scaffold(
       body: SingleChildScrollView(
         child: Container(
@@ -35,7 +44,8 @@ class LoginScreen extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 15, right: 15, top: 30),
                   child: Column(
                     children: [
-                      const TextField(
+                      TextField(
+                        controller: _txtEmailControlle,
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
                           label: Text("Email Address"),
@@ -47,7 +57,8 @@ class LoginScreen extends StatelessWidget {
                       const SizedBox(
                         height: 10,
                       ),
-                      const TextField(
+                      TextField(
+                        controller: _txtPasswordControlle,
                         keyboardType: TextInputType.visiblePassword,
                         obscuringCharacter: "*",
                         obscureText: true,
@@ -65,7 +76,9 @@ class LoginScreen extends StatelessWidget {
                         height: 50,
                         width: MediaQuery.of(context).size.width,
                         child: ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              login();
+                            },
                             style: ElevatedButton.styleFrom(
                                 backgroundColor: MyColors.colorGreen,
                                 foregroundColor: Colors.white,
@@ -106,5 +119,71 @@ class LoginScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  login() async {
+    if (checkFields()) {
+      try {
+        if (!await checkConnectivity()) {
+          showSnackBar("No Internet Connection");
+          return;
+        }
+        final _auth = FirebaseAuth.instance;
+        UserCredential _user = await _auth.signInWithEmailAndPassword(
+            email: _txtEmailControlle.text,
+            password: _txtPasswordControlle.text);
+        if (_user == null) {
+          showSnackBar("Wrong Email or Password");
+        } else {
+          DatabaseReference ref =
+              FirebaseDatabase.instance.ref("user/${_user.user!.uid}");
+          ref.once().then((DatabaseEvent dbEvent) {
+            if (dbEvent.snapshot.value != null) {
+              Navigator.pushNamedAndRemoveUntil(
+                  _context, PagesRouteData.mainPage, (route) => false);
+            } else {
+              showSnackBar("User Profile Data Not Found");
+            }
+          });
+        }
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'user-not-found') {
+          print('No user found for that email.');
+        } else if (e.code == 'wrong-password') {
+          print('Wrong password provided for that user.');
+        }
+      } catch (e) {}
+    }
+  }
+
+  Future<bool> checkConnectivity() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.mobile ||
+        connectivityResult == ConnectivityResult.wifi) {
+      print("Connection : ${ConnectivityResult.mobile}");
+      return true;
+    }
+    return false;
+  }
+
+  bool checkFields() {
+    if (_txtEmailControlle.text.length < 6 ||
+        !_txtEmailControlle.text.contains("@")) {
+      showSnackBar("Invalid Email Address");
+      return false;
+    }
+
+    if (_txtPasswordControlle.text.length < 8) {
+      showSnackBar("Valid Password has more than 8 characters");
+      return false;
+    }
+    return true;
+  }
+
+  showSnackBar(String txt) {
+    var snackBar = SnackBar(
+      content: Text(txt),
+    );
+    ScaffoldMessenger.of(_context).showSnackBar(snackBar);
   }
 }
