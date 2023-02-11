@@ -1,5 +1,6 @@
 import 'package:cab_rider/core/utils/colors.dart';
 import 'package:cab_rider/core/utils/page_routes.dart';
+import 'package:cab_rider/core/widgets/progress_dialog.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -122,9 +123,14 @@ class LoginScreen extends StatelessWidget {
   }
 
   login() async {
+    showDialog(
+        context: _context,
+        barrierDismissible: false,
+        builder: (context) => const ProgressDialog("Logging Progress"));
     if (checkFields()) {
       try {
         if (!await checkConnectivity()) {
+          Navigator.pop(_context);
           showSnackBar("No Internet Connection");
           return;
         }
@@ -133,6 +139,7 @@ class LoginScreen extends StatelessWidget {
             email: _txtEmailControlle.text,
             password: _txtPasswordControlle.text);
         if (_user == null) {
+          Navigator.pop(_context);
           showSnackBar("Wrong Email or Password");
         } else {
           DatabaseReference ref =
@@ -142,17 +149,23 @@ class LoginScreen extends StatelessWidget {
               Navigator.pushNamedAndRemoveUntil(
                   _context, PagesRouteData.mainPage, (route) => false);
             } else {
+              Navigator.pop(_context);
               showSnackBar("User Profile Data Not Found");
             }
           });
         }
       } on FirebaseAuthException catch (e) {
+        Navigator.pop(_context);
         if (e.code == 'user-not-found') {
           print('No user found for that email.');
         } else if (e.code == 'wrong-password') {
           print('Wrong password provided for that user.');
         }
-      } catch (e) {}
+      } catch (e) {
+        Navigator.pop(_context);
+      }
+    } else {
+      Navigator.pop(_context);
     }
   }
 

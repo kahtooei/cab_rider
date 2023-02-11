@@ -1,5 +1,6 @@
 import 'package:cab_rider/core/utils/colors.dart';
 import 'package:cab_rider/core/utils/page_routes.dart';
+import 'package:cab_rider/core/widgets/progress_dialog.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -148,9 +149,14 @@ class RegisterScreen extends StatelessWidget {
   }
 
   void doRegister() async {
+    showDialog(
+        context: _context,
+        barrierDismissible: false,
+        builder: (context) => const ProgressDialog("Register Progress"));
     if (checkFields()) {
       try {
         if (!await checkConnectivity()) {
+          Navigator.pop(_context);
           showSnackBar("No Internet Connection");
           return;
         }
@@ -170,17 +176,22 @@ class RegisterScreen extends StatelessWidget {
           // ignore: use_build_context_synchronously
           Navigator.pushNamedAndRemoveUntil(
               _context, PagesRouteData.mainPage, (route) => false);
+        } else {
+          Navigator.pop(_context);
         }
       } on FirebaseAuthException catch (e) {
+        Navigator.pop(_context);
         if (e.code == 'weak-password') {
           showSnackBar('The password provided is too weak.');
         } else if (e.code == 'email-already-in-use') {
           showSnackBar('The account already exists for that email.');
         }
       } catch (e) {
+        Navigator.pop(_context);
         showSnackBar('Error...');
-        debugPrint(e.toString());
       }
+    } else {
+      Navigator.pop(_context);
     }
   }
 
