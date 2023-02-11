@@ -1,12 +1,23 @@
 import 'package:cab_rider/core/utils/colors.dart';
 import 'package:cab_rider/core/utils/page_routes.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
 class RegisterScreen extends StatelessWidget {
-  const RegisterScreen({super.key});
+  RegisterScreen({super.key});
+
+  final _txtFullnameControlle = TextEditingController();
+  final _txtEmailControlle = TextEditingController();
+  final _txtPasswordControlle = TextEditingController();
+  final _txtPhoneControlle = TextEditingController();
+
+  late BuildContext _context;
 
   @override
   Widget build(BuildContext context) {
+    _context = context;
     return Scaffold(
       body: SingleChildScrollView(
         child: Container(
@@ -35,52 +46,56 @@ class RegisterScreen extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 15, right: 15, top: 30),
                   child: Column(
                     children: [
-                      const TextField(
+                      TextField(
                         keyboardType: TextInputType.text,
-                        decoration: InputDecoration(
+                        controller: _txtFullnameControlle,
+                        decoration: const InputDecoration(
                           label: Text("Full Name"),
                           labelStyle:
                               TextStyle(color: Colors.grey, fontSize: 12),
                         ),
-                        style: TextStyle(fontSize: 14),
+                        style: const TextStyle(fontSize: 14),
                       ),
                       const SizedBox(
                         height: 10,
                       ),
-                      const TextField(
+                      TextField(
+                        controller: _txtEmailControlle,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           label: Text("Email Address"),
                           labelStyle:
                               TextStyle(color: Colors.grey, fontSize: 12),
                         ),
-                        style: TextStyle(fontSize: 14),
+                        style: const TextStyle(fontSize: 14),
                       ),
                       const SizedBox(
                         height: 10,
                       ),
-                      const TextField(
+                      TextField(
+                        controller: _txtPhoneControlle,
                         keyboardType: TextInputType.phone,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           label: Text("Phone Number"),
                           labelStyle:
                               TextStyle(color: Colors.grey, fontSize: 12),
                         ),
-                        style: TextStyle(fontSize: 14),
+                        style: const TextStyle(fontSize: 14),
                       ),
                       const SizedBox(
                         height: 10,
                       ),
-                      const TextField(
+                      TextField(
+                        controller: _txtPasswordControlle,
                         keyboardType: TextInputType.visiblePassword,
                         obscuringCharacter: "*",
                         obscureText: true,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           label: Text("Password"),
                           labelStyle:
                               TextStyle(color: Colors.grey, fontSize: 12),
                         ),
-                        style: TextStyle(fontSize: 14),
+                        style: const TextStyle(fontSize: 14),
                       ),
                       const SizedBox(
                         height: 50,
@@ -89,7 +104,9 @@ class RegisterScreen extends StatelessWidget {
                         height: 50,
                         width: MediaQuery.of(context).size.width,
                         child: ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              doRegister();
+                            },
                             style: ElevatedButton.styleFrom(
                                 backgroundColor: MyColors.colorGreen,
                                 foregroundColor: Colors.white,
@@ -128,5 +145,80 @@ class RegisterScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void doRegister() async {
+    if (checkFields()) {
+      try {
+        if (!await checkConnectivity()) {
+          showSnackBar("No Internet Connection");
+          return;
+        }
+        final credential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _txtEmailControlle.text,
+          password: _txtPasswordControlle.text,
+        );
+        if (credential.user != null) {
+          DatabaseReference ref =
+              FirebaseDatabase.instance.ref("user/${credential.user!.uid}");
+          await ref.set({
+            "fullName": _txtFullnameControlle.text,
+            "email": _txtEmailControlle.text,
+            "phone": _txtPhoneControlle.text,
+          });
+          // ignore: use_build_context_synchronously
+          Navigator.pushNamedAndRemoveUntil(
+              _context, PagesRouteData.mainPage, (route) => false);
+        }
+      } on FirebaseAuthException catch (e) {
+        if (e.code == 'weak-password') {
+          showSnackBar('The password provided is too weak.');
+        } else if (e.code == 'email-already-in-use') {
+          showSnackBar('The account already exists for that email.');
+        }
+      } catch (e) {
+        showSnackBar('Error...');
+        debugPrint(e.toString());
+      }
+    }
+  }
+
+  Future<bool> checkConnectivity() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.mobile ||
+        connectivityResult == ConnectivityResult.wifi) {
+      print("Connection : ${ConnectivityResult.mobile}");
+      return true;
+    }
+    return false;
+  }
+
+  bool checkFields() {
+    if (_txtFullnameControlle.text.length < 4) {
+      showSnackBar("Valid Fullname has more than 3 characters");
+      return false;
+    }
+    if (_txtEmailControlle.text.length < 6 ||
+        !_txtEmailControlle.text.contains("@")) {
+      showSnackBar("Invalid Email Address");
+      return false;
+    }
+    if (_txtPhoneControlle.text.length < 11) {
+      showSnackBar("Invalid Phone Number");
+      return false;
+    }
+    if (_txtPasswordControlle.text.length < 8) {
+      showSnackBar("Valid Password has more than 8 characters");
+      return false;
+    }
+    return true;
+  }
+
+  showSnackBar(String txt) {
+    var snackBar = SnackBar(
+      content: Text(txt),
+    );
+    ScaffoldMessenger.of(_context).showSnackBar(snackBar);
   }
 }
