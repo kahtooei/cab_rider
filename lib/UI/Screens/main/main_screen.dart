@@ -1,3 +1,4 @@
+import 'package:cab_rider/UI/Screens/main/drawer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
@@ -10,6 +11,8 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
+  double mapPadding = 350;
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
 
@@ -21,14 +24,20 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey,
+      drawer: const MyDrawerWidget(),
       body: Stack(
         children: [
           GoogleMap(
+            padding: EdgeInsets.only(bottom: mapPadding),
             mapType: MapType.normal,
             myLocationButtonEnabled: true,
             initialCameraPosition: _kGooglePlex,
             onMapCreated: (GoogleMapController controller) {
               _controller.complete(controller);
+              setState(() {
+                mapPadding = 300;
+              });
             },
           ),
           Positioned(
@@ -108,7 +117,35 @@ class _MainScreenState extends State<MainScreen> {
                 ),
               ),
             ),
-          )
+          ),
+          Positioned(
+              top: 40,
+              left: 20,
+              child: GestureDetector(
+                onTap: () {
+                  scaffoldKey.currentState!.openDrawer();
+                },
+                child: Container(
+                  height: 40,
+                  width: 40,
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(25),
+                      boxShadow: const [
+                        BoxShadow(
+                            blurRadius: 15,
+                            spreadRadius: 0.5,
+                            color: Colors.black54)
+                      ]),
+                  child: const CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: Icon(
+                      Icons.menu,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+              )),
         ],
       ),
     );
