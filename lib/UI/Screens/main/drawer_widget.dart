@@ -1,4 +1,4 @@
-import 'package:cab_rider/core/constants/styles.dart';
+import 'package:cab_rider/shared/constants/styles.dart';
 import 'package:flutter/material.dart';
 
 class MyDrawerWidget extends StatelessWidget {

@@ -1,6 +1,9 @@
-import 'package:cab_rider/core/utils/colors.dart';
-import 'package:cab_rider/core/utils/page_routes.dart';
-import 'package:cab_rider/core/widgets/progress_dialog.dart';
+import 'package:cab_rider/bloc/main_screen_bloc/main_screen_bloc.dart';
+import 'package:cab_rider/data/remote/geocoding.dart';
+import 'package:cab_rider/repository/main_screen_repository.dart';
+import 'package:cab_rider/shared/utils/colors.dart';
+import 'package:cab_rider/shared/utils/page_routes.dart';
+import 'package:cab_rider/shared/widgets/progress_dialog.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -110,7 +113,7 @@ class LoginScreen extends StatelessWidget {
                               },
                               child: const Text("Sign Up here"))
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),

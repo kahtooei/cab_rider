@@ -1,4 +1,4 @@
-import 'package:cab_rider/core/utils/colors.dart';
+import 'package:cab_rider/shared/utils/colors.dart';
 import 'package:flutter/material.dart';
 
 class ProgressDialog extends StatelessWidget {

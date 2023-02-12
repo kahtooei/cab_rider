@@ -1,5 +1,6 @@
 import 'package:cab_rider/UI/Screens/main/drawer_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
 
@@ -15,11 +16,39 @@ class _MainScreenState extends State<MainScreen> {
   double mapPadding = 350;
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
-
+  late final GoogleMapController mapController;
+  final GeolocatorPlatform _geolocatorPlatform = GeolocatorPlatform.instance;
   static const CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(37.42796133580664, -122.085749655962),
     zoom: 14.4746,
   );
+
+  late Position _currentPosition;
+
+  @override
+  void initState() {
+    super.initState();
+    checkPermission();
+  }
+
+  checkPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission.name == "denied" || permission.name == "deniedForever") {
+      LocationPermission reqPermission = await Geolocator.requestPermission();
+      permission = reqPermission;
+    }
+
+    if (permission.name == "whileInUse" || permission.name == "always") {
+      bool serviceEnabled =
+          await _geolocatorPlatform.isLocationServiceEnabled();
+      // if (serviceEnabled) {
+      //   print("+++++++++ENABLE++++++++++");
+      //   setState(() {});
+      // } else {
+      //   print("--------DISABLE----------");
+      // }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,15 +58,21 @@ class _MainScreenState extends State<MainScreen> {
       body: Stack(
         children: [
           GoogleMap(
-            padding: EdgeInsets.only(bottom: mapPadding),
+            padding: EdgeInsets.only(bottom: mapPadding, top: 20),
             mapType: MapType.normal,
             myLocationButtonEnabled: true,
+            myLocationEnabled: true,
+            zoomGesturesEnabled: true,
+            zoomControlsEnabled: true,
             initialCameraPosition: _kGooglePlex,
             onMapCreated: (GoogleMapController controller) {
               _controller.complete(controller);
+              mapController = controller;
+
               setState(() {
                 mapPadding = 300;
               });
+              setCurrentPosition();
             },
           ),
           Positioned(
@@ -149,5 +184,15 @@ class _MainScreenState extends State<MainScreen> {
         ],
       ),
     );
+  }
+
+  setCurrentPosition() async {
+    try {
+      _currentPosition = await Geolocator.getCurrentPosition();
+      LatLng currentPos =
+          LatLng(_currentPosition.latitude, _currentPosition.longitude);
+      CameraPosition currentCP = CameraPosition(target: currentPos, zoom: 14);
+      mapController.animateCamera(CameraUpdate.newCameraPosition(currentCP));
+    } catch (e) {}
   }
 }
