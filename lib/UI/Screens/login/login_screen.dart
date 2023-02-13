@@ -4,6 +4,7 @@ import 'package:cab_rider/bloc/main_screen_bloc/main_screen_bloc.dart';
 import 'package:cab_rider/data/remote/geocoding.dart';
 import 'package:cab_rider/data/remote/places_api.dart';
 import 'package:cab_rider/repository/main_screen_repository.dart';
+import 'package:cab_rider/repository/models/address.dart';
 import 'package:cab_rider/repository/models/prediction.dart';
 import 'package:cab_rider/shared/resources/request_status.dart';
 import 'package:cab_rider/shared/utils/colors.dart';

@@ -25,3 +25,8 @@ class GetPredictionsListEvent extends MainScreenEvent {
   final String name;
   GetPredictionsListEvent({required this.name});
 }
+
+class GetSelectedPlaceDetailsEvent extends MainScreenEvent {
+  final String placeId;
+  GetSelectedPlaceDetailsEvent({required this.placeId});
+}

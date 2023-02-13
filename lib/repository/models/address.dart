@@ -3,6 +3,7 @@ class AddressModel {
   double? longitude;
   String? placeId;
   String? placeFormattedAddress;
+  String? placeName;
 
   AddressModel(
       {this.latitude,

@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_status.dart';
 import 'package:cab_rider/repository/main_screen_repository.dart';
+import 'package:cab_rider/repository/models/address.dart';
 import 'package:cab_rider/shared/resources/request_status.dart';
 import 'package:meta/meta.dart';
 
@@ -12,7 +13,8 @@ class MainScreenBloc extends Bloc<MainScreenEvent, MainScreenState> {
   MainScreenBloc(this.mainScreenRepository)
       : super(MainScreenState(
             currentPosition: LoadingMainScreenStatus(),
-            predictionsList: CompletePredictionsStatus([]))) {
+            predictionsList: CompletePredictionsStatus([]),
+            selectedPlaceDetails: LoadingPlaceDetailsStatus())) {
     //get current address
     on<GetCurrentAddressEvent>((event, emit) async {
       emit(state.copyWith(current_position: LoadingMainScreenStatus()));
@@ -57,6 +59,21 @@ class MainScreenBloc extends Bloc<MainScreenEvent, MainScreenState> {
       } else {
         emit(state.copyWith(
             predictions_list: FailedPredictionsStatus(request.error!)));
+      }
+    });
+
+    //get place details by placeId
+    on<GetSelectedPlaceDetailsEvent>((event, emit) async {
+      emit(state.copyWith(selected_place_details: LoadingPlaceDetailsStatus()));
+      RequestStatus request =
+          await mainScreenRepository.getPlaceDetails(event.placeId);
+      if (request is SuccessRequest) {
+        emit(state.copyWith(
+            selected_place_details:
+                CompletePlaceDetailsStatus(request.response)));
+      } else {
+        emit(state.copyWith(
+            selected_place_details: FailedPlaceDetailsStatus(request.error!)));
       }
     });
   }

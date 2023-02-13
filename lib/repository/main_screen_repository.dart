@@ -68,4 +68,25 @@ class MainScreenRepository {
       return FailedRequest<List<PredictionModel>>(e.toString());
     }
   }
+
+  Future<RequestStatus<AddressModel>> getPlaceDetails(String placeId) async {
+    try {
+      var res = await placeAPI.getPlaceDetails(placeId);
+      if (res == '') {
+        return FailedRequest<AddressModel>('request error');
+      } else {
+        Map data = jsonDecode(res);
+        AddressModel placeDetails = AddressModel();
+        placeDetails.placeId = placeId;
+        placeDetails.placeFormattedAddress =
+            data['result']['formatted_address'];
+        placeDetails.placeName = data['result']['name'];
+        placeDetails.latitude = data['result']['geometry']['location']['lat'];
+        placeDetails.longitude = data['result']['geometry']['location']['lng'];
+        return SuccessRequest<AddressModel>(placeDetails);
+      }
+    } catch (e) {
+      return FailedRequest<AddressModel>(e.toString());
+    }
+  }
 }

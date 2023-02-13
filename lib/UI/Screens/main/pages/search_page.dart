@@ -1,3 +1,4 @@
+import 'package:cab_rider/UI/Screens/main/widgets/prediction_list_item.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_bloc.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_status.dart';
 import 'package:cab_rider/shared/utils/colors.dart';
@@ -120,6 +121,12 @@ class SearchPage extends StatelessWidget {
                         child: TextField(
                           controller: _txtDestinationController,
                           focusNode: _focusDestination,
+                          onChanged: (txt) {
+                            if (txt.isNotEmpty) {
+                              BlocProvider.of<MainScreenBloc>(context)
+                                  .add(GetPredictionsListEvent(name: txt));
+                            }
+                          },
                           decoration: const InputDecoration(
                               hintText: "Where to?",
                               fillColor: MyColors.colorLightGrayFair,
@@ -132,7 +139,37 @@ class SearchPage extends StatelessWidget {
                   ),
                 ],
               ),
-            )
+            ),
+            Expanded(
+              child: BlocBuilder<MainScreenBloc, MainScreenState>(
+                builder: (context, state) {
+                  switch (state.predictionsList.runtimeType) {
+                    case LoadingPredictionsStatus:
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    case FailedPredictionsStatus:
+                      return const Center(
+                        child: Text("Failed"),
+                      );
+                    case CompletePredictionsStatus:
+                      return ListView.builder(
+                        itemCount:
+                            (state.predictionsList as CompletePredictionsStatus)
+                                .predictionsList
+                                .length,
+                        itemBuilder: (context, index) {
+                          return PredictionListItem((state.predictionsList
+                                  as CompletePredictionsStatus)
+                              .predictionsList[index]);
+                        },
+                      );
+                    default:
+                      return Container();
+                  }
+                },
+              ),
+            ),
           ],
         ),
       ),

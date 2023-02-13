@@ -30,3 +30,18 @@ class CompletePredictionsStatus extends PredictionsStatus {
   final List<PredictionModel> predictionsList;
   CompletePredictionsStatus(this.predictionsList);
 }
+
+//get place details for selected place from prediction
+class PlaceDetailsStatus {}
+
+class LoadingPlaceDetailsStatus extends PlaceDetailsStatus {}
+
+class FailedPlaceDetailsStatus extends PlaceDetailsStatus {
+  final String error;
+  FailedPlaceDetailsStatus(this.error);
+}
+
+class CompletePlaceDetailsStatus extends PlaceDetailsStatus {
+  final AddressModel placeDetails;
+  CompletePlaceDetailsStatus(this.placeDetails);
+}
