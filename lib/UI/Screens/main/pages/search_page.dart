@@ -1,11 +1,34 @@
+import 'package:cab_rider/bloc/main_screen_bloc/main_screen_bloc.dart';
+import 'package:cab_rider/bloc/main_screen_bloc/main_screen_status.dart';
 import 'package:cab_rider/shared/utils/colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SearchPage extends StatelessWidget {
-  const SearchPage({super.key});
+  SearchPage({super.key});
+
+  final _txtPickupController = TextEditingController();
+  final _txtDestinationController = TextEditingController();
+  final _focusDestination = FocusNode();
+  bool isFirstInit = true;
+
+  firstInit(BuildContext context) {
+    if (isFirstInit) {
+      String picupAddress = "";
+      FocusScope.of(context).requestFocus(_focusDestination);
+      var currentLocation =
+          context.read<MainScreenBloc>().state.currentPosition;
+      if (currentLocation is CompleteMainScreenStatus) {
+        picupAddress = currentLocation.address.placeFormattedAddress!;
+      }
+      isFirstInit = false;
+      _txtPickupController.text = picupAddress;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    firstInit(context);
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -63,8 +86,9 @@ class SearchPage extends StatelessWidget {
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(4),
                             color: MyColors.colorLightGrayFair),
-                        child: const TextField(
-                          decoration: InputDecoration(
+                        child: TextField(
+                          controller: _txtPickupController,
+                          decoration: const InputDecoration(
                               hintText: "Pickup location",
                               fillColor: MyColors.colorLightGrayFair,
                               filled: true,
@@ -93,8 +117,10 @@ class SearchPage extends StatelessWidget {
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(4),
                             color: MyColors.colorLightGrayFair),
-                        child: const TextField(
-                          decoration: InputDecoration(
+                        child: TextField(
+                          controller: _txtDestinationController,
+                          focusNode: _focusDestination,
+                          decoration: const InputDecoration(
                               hintText: "Where to?",
                               fillColor: MyColors.colorLightGrayFair,
                               filled: true,

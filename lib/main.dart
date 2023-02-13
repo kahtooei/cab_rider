@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
         PagesRouteData.loginPage: (context) => LoginScreen(),
         PagesRouteData.registerPage: (context) => RegisterScreen(),
         PagesRouteData.mainPage: (context) => const MainScreen(),
-        PagesRouteData.searchPage: (context) => const SearchPage(),
+        PagesRouteData.searchPage: (context) => SearchPage(),
       },
     );
   }
