@@ -1,5 +1,6 @@
 import 'package:cab_rider/UI/Screens/login/login_screen.dart';
 import 'package:cab_rider/UI/Screens/main/main_screen.dart';
+import 'package:cab_rider/UI/Screens/main/pages/search_page.dart';
 import 'package:cab_rider/UI/Screens/register/register_screen.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_bloc.dart';
 import 'package:cab_rider/locator.dart';
@@ -39,6 +40,7 @@ class MyApp extends StatelessWidget {
         PagesRouteData.loginPage: (context) => LoginScreen(),
         PagesRouteData.registerPage: (context) => RegisterScreen(),
         PagesRouteData.mainPage: (context) => const MainScreen(),
+        PagesRouteData.searchPage: (context) => const SearchPage(),
       },
     );
   }

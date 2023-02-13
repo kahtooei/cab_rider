@@ -12,13 +12,16 @@ class MainScreenBloc extends Bloc<MainScreenEvent, MainScreenState> {
   MainScreenBloc(this.mainScreenRepository)
       : super(MainScreenState(currentPosition: LoadingMainScreenStatus())) {
     on<GetCurrentAddressEvent>((event, emit) async {
+      print("############# START EVENT ##################");
       emit(state.copyWith(current_position: LoadingMainScreenStatus()));
       RequestStatus request = await mainScreenRepository.getAddressWithPosition(
           event.longitude, event.latitude);
       if (request is SuccessRequest) {
+        print("############# EMIT SUCCESS ##################");
         emit(state.copyWith(
             current_position: CompleteMainScreenStatus(request.response)));
       } else {
+        print("############# EMIT FAILED ##################");
         emit(state.copyWith(
             current_position: FailedMainScreenStatus(request.error!)));
       }

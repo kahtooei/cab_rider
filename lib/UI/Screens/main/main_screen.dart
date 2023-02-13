@@ -1,5 +1,9 @@
-import 'package:cab_rider/UI/Screens/main/drawer_widget.dart';
+import 'package:cab_rider/UI/Screens/main/widgets/drawer_widget.dart';
+import 'package:cab_rider/bloc/main_screen_bloc/main_screen_bloc.dart';
+import 'package:cab_rider/bloc/main_screen_bloc/main_screen_status.dart';
+import 'package:cab_rider/shared/utils/page_routes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
@@ -41,12 +45,6 @@ class _MainScreenState extends State<MainScreen> {
     if (permission.name == "whileInUse" || permission.name == "always") {
       bool serviceEnabled =
           await _geolocatorPlatform.isLocationServiceEnabled();
-      // if (serviceEnabled) {
-      //   print("+++++++++ENABLE++++++++++");
-      //   setState(() {});
-      // } else {
-      //   print("--------DISABLE----------");
-      // }
     }
   }
 
@@ -112,20 +110,36 @@ class _MainScreenState extends State<MainScreen> {
                     const SizedBox(
                       height: 20,
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(5),
-                          boxShadow: const [
-                            BoxShadow(
-                                blurRadius: 4,
-                                spreadRadius: 0.5,
-                                color: Colors.black26)
-                          ]),
-                      child: const TextField(
-                        decoration: InputDecoration(
-                          prefixIcon: Icon(Icons.search),
-                          hintText: "search destination",
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(context, PagesRouteData.searchPage);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 15),
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(5),
+                            boxShadow: const [
+                              BoxShadow(
+                                  blurRadius: 4,
+                                  spreadRadius: 0.5,
+                                  color: Colors.black26)
+                            ]),
+                        child: Row(
+                          children: const [
+                            Icon(
+                              Icons.search,
+                              color: Colors.black54,
+                            ),
+                            SizedBox(
+                              width: 30,
+                            ),
+                            Text(
+                              "Search Destination",
+                              style: TextStyle(fontSize: 16),
+                            )
+                          ],
                         ),
                       ),
                     ),
@@ -134,7 +148,24 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                     ListTile(
                       leading: const Icon(Icons.home),
-                      title: const Text("Add Home"),
+                      // title: const Text("Add Home"),
+                      title: BlocBuilder<MainScreenBloc, MainScreenState>(
+                        builder: (context, state) {
+                          switch (state.currentPosition.runtimeType) {
+                            case LoadingMainScreenStatus:
+                              return const Text("Add Home");
+                            case FailedMainScreenStatus:
+                              return const Text("Failed Get Home");
+                            case CompleteMainScreenStatus:
+                              return Text((state.currentPosition
+                                      as CompleteMainScreenStatus)
+                                  .address
+                                  .placeFormattedAddress!);
+                            default:
+                              return const Text("");
+                          }
+                        },
+                      ),
                       subtitle: const Text("Your residential address"),
                       onTap: () {},
                     ),
@@ -193,6 +224,9 @@ class _MainScreenState extends State<MainScreen> {
           LatLng(_currentPosition.latitude, _currentPosition.longitude);
       CameraPosition currentCP = CameraPosition(target: currentPos, zoom: 14);
       mapController.animateCamera(CameraUpdate.newCameraPosition(currentCP));
+      BlocProvider.of<MainScreenBloc>(context).add(GetCurrentAddressEvent(
+          latitude: _currentPosition.latitude,
+          longitude: _currentPosition.longitude));
     } catch (e) {}
   }
 }
