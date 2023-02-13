@@ -10,23 +10,24 @@ part 'main_screen_state.dart';
 class MainScreenBloc extends Bloc<MainScreenEvent, MainScreenState> {
   MainScreenRepository mainScreenRepository;
   MainScreenBloc(this.mainScreenRepository)
-      : super(MainScreenState(currentPosition: LoadingMainScreenStatus())) {
+      : super(MainScreenState(
+            currentPosition: LoadingMainScreenStatus(),
+            predictionsList: CompletePredictionsStatus([]))) {
+    //get current address
     on<GetCurrentAddressEvent>((event, emit) async {
-      print("############# START EVENT ##################");
       emit(state.copyWith(current_position: LoadingMainScreenStatus()));
       RequestStatus request = await mainScreenRepository.getAddressWithPosition(
           event.longitude, event.latitude);
       if (request is SuccessRequest) {
-        print("############# EMIT SUCCESS ##################");
         emit(state.copyWith(
             current_position: CompleteMainScreenStatus(request.response)));
       } else {
-        print("############# EMIT FAILED ##################");
         emit(state.copyWith(
             current_position: FailedMainScreenStatus(request.error!)));
       }
     });
 
+    //get address with positions
     on<GetAddressWithPositionEvent>((event, emit) async {
       emit(state.copyWith(current_position: LoadingMainScreenStatus()));
       RequestStatus request = await mainScreenRepository.getAddressWithPosition(
@@ -38,10 +39,25 @@ class MainScreenBloc extends Bloc<MainScreenEvent, MainScreenState> {
       }
     });
 
+    //get positions with address
     on<GetPositionWithAddressEvent>((event, emit) async {
       emit(state.copyWith(current_position: LoadingMainScreenStatus()));
       RequestStatus request =
           await mainScreenRepository.getPositionWithAddress(event.address);
+    });
+
+    //get predictions
+    on<GetPredictionsListEvent>((event, emit) async {
+      emit(state.copyWith(predictions_list: LoadingPredictionsStatus()));
+      RequestStatus request =
+          await mainScreenRepository.getPredictionPlaces(event.name);
+      if (request is SuccessRequest) {
+        emit(state.copyWith(
+            predictions_list: CompletePredictionsStatus(request.response)));
+      } else {
+        emit(state.copyWith(
+            predictions_list: FailedPredictionsStatus(request.error!)));
+      }
     });
   }
 }

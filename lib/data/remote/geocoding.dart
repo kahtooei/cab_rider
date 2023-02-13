@@ -14,7 +14,7 @@ class GoogleGeoCoding {
       // return response.body;
       return sampleAddressResponse;
     } else {
-      return 'failed';
+      return '';
     }
   }
 
@@ -27,7 +27,7 @@ class GoogleGeoCoding {
       // return response.body;
       return samplePositionResponse;
     } else {
-      return 'failed';
+      return '';
     }
   }
 }

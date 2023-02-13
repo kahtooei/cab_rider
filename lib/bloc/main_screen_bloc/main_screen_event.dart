@@ -20,3 +20,8 @@ class GetCurrentAddressEvent extends MainScreenEvent {
   final double longitude;
   GetCurrentAddressEvent({required this.latitude, required this.longitude});
 }
+
+class GetPredictionsListEvent extends MainScreenEvent {
+  final String name;
+  GetPredictionsListEvent({required this.name});
+}
