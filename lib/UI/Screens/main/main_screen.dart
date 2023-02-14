@@ -1,6 +1,8 @@
 import 'package:cab_rider/UI/Screens/main/widgets/drawer_widget.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_bloc.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_status.dart';
+import 'package:cab_rider/repository/models/address.dart';
+import 'package:cab_rider/shared/utils/colors.dart';
 import 'package:cab_rider/shared/utils/page_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,6 +32,8 @@ class _MainScreenState extends State<MainScreen> {
   late Position _currentPosition;
   List<LatLng> _points = [];
   Set<Polyline> _polylines = {};
+  Set<Marker> _markers = {};
+  Set<Circle> _circles = {};
 
   @override
   void initState() {
@@ -65,6 +69,8 @@ class _MainScreenState extends State<MainScreen> {
             zoomGesturesEnabled: true,
             zoomControlsEnabled: true,
             polylines: _polylines,
+            markers: _markers,
+            circles: _circles,
             initialCameraPosition: _kGooglePlex,
             onMapCreated: (GoogleMapController controller) {
               _controller.complete(controller);
@@ -226,8 +232,11 @@ class _MainScreenState extends State<MainScreen> {
             listener: (context, state) {
               _points.clear();
               _polylines.clear();
+              _markers.clear();
+              _circles.clear();
               if (state.routeDirection.runtimeType ==
                   CompleteDirectionsStatus) {
+                //update polyline for current directions
                 String encoded_points =
                     (state.routeDirection as CompleteDirectionsStatus)
                         .direction
@@ -249,7 +258,60 @@ class _MainScreenState extends State<MainScreen> {
                   geodesic: true,
                 );
                 _polylines.add(polyline);
+
+                //fitting polyline on map
+
+                AddressModel start =
+                    (state.currentPosition as CompleteMainScreenStatus).address;
+                AddressModel end =
+                    (state.selectedPlaceDetails as CompletePlaceDetailsStatus)
+                        .placeDetails;
+
+                LatLngBounds bounds = getBounds(start, end);
+                mapController
+                    .animateCamera(CameraUpdate.newLatLngBounds(bounds, 70));
+
+                //set markers
+                Marker startMarker = Marker(
+                    markerId: MarkerId('start'),
+                    position: LatLng(start.latitude!, start.longitude!),
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                        BitmapDescriptor.hueRed),
+                    infoWindow: InfoWindow(
+                        title: start.placeFormattedAddress,
+                        snippet: 'Pickup Location'));
+                Marker endMarker = Marker(
+                    markerId: MarkerId('end'),
+                    position: LatLng(end.latitude!, end.longitude!),
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                        BitmapDescriptor.hueRed),
+                    infoWindow: InfoWindow(
+                        title: end.placeName, snippet: 'Destination Location'));
+
+                _markers.add(startMarker);
+                _markers.add(endMarker);
+
+                //set Circles
+                Circle startCircle = Circle(
+                    circleId: CircleId('start'),
+                    strokeWidth: 5,
+                    strokeColor: MyColors.colorGreen,
+                    radius: 12,
+                    center: LatLng(start.latitude!, start.longitude!),
+                    fillColor: MyColors.colorGreen);
+
+                Circle endCircle = Circle(
+                    circleId: CircleId('end'),
+                    strokeWidth: 5,
+                    strokeColor: MyColors.colorAccentPurple,
+                    radius: 12,
+                    center: LatLng(end.latitude!, end.longitude!),
+                    fillColor: MyColors.colorAccentPurple);
+
+                _circles.add(startCircle);
+                _circles.add(endCircle);
               }
+
               setState(() {});
             },
             child: Container(),
@@ -257,6 +319,26 @@ class _MainScreenState extends State<MainScreen> {
         ],
       ),
     );
+  }
+
+  LatLngBounds getBounds(AddressModel start, AddressModel end) {
+    if (start.latitude! > end.latitude! && start.longitude! > end.longitude!) {
+      return LatLngBounds(
+          southwest: LatLng(end.latitude!, end.longitude!),
+          northeast: LatLng(start.latitude!, start.latitude!));
+    } else if (start.latitude! > end.longitude!) {
+      return LatLngBounds(
+          southwest: LatLng(start.latitude!, start.latitude!),
+          northeast: LatLng(end.latitude!, end.longitude!));
+    } else if (start.latitude! > end.latitude!) {
+      return LatLngBounds(
+          southwest: LatLng(end.latitude!, end.longitude!),
+          northeast: LatLng(start.latitude!, start.latitude!));
+    } else {
+      return LatLngBounds(
+          southwest: LatLng(start.latitude!, start.latitude!),
+          northeast: LatLng(end.latitude!, end.longitude!));
+    }
   }
 
   setCurrentPosition() async {
