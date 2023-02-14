@@ -1,4 +1,5 @@
 import 'package:cab_rider/repository/models/address.dart';
+import 'package:cab_rider/repository/models/direction.dart';
 import 'package:cab_rider/repository/models/prediction.dart';
 
 class MainScreenStatus {}
@@ -44,4 +45,19 @@ class FailedPlaceDetailsStatus extends PlaceDetailsStatus {
 class CompletePlaceDetailsStatus extends PlaceDetailsStatus {
   final AddressModel placeDetails;
   CompletePlaceDetailsStatus(this.placeDetails);
+}
+
+//get directions for selected start and end positions
+class DirectionsStatus {}
+
+class LoadingDirectionsStatus extends DirectionsStatus {}
+
+class FailedDirectionsStatus extends DirectionsStatus {
+  final String error;
+  FailedDirectionsStatus(this.error);
+}
+
+class CompleteDirectionsStatus extends DirectionsStatus {
+  final DirectionModel direction;
+  CompleteDirectionsStatus(this.direction);
 }

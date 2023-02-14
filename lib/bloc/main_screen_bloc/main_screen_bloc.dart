@@ -3,6 +3,7 @@ import 'package:cab_rider/bloc/main_screen_bloc/main_screen_status.dart';
 import 'package:cab_rider/repository/main_screen_repository.dart';
 import 'package:cab_rider/repository/models/address.dart';
 import 'package:cab_rider/shared/resources/request_status.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:meta/meta.dart';
 
 part 'main_screen_event.dart';
@@ -14,7 +15,8 @@ class MainScreenBloc extends Bloc<MainScreenEvent, MainScreenState> {
       : super(MainScreenState(
             currentPosition: LoadingMainScreenStatus(),
             predictionsList: CompletePredictionsStatus([]),
-            selectedPlaceDetails: LoadingPlaceDetailsStatus())) {
+            selectedPlaceDetails: LoadingPlaceDetailsStatus(),
+            routeDirection: LoadingDirectionsStatus())) {
     //get current address
     on<GetCurrentAddressEvent>((event, emit) async {
       emit(state.copyWith(current_position: LoadingMainScreenStatus()));
@@ -74,6 +76,20 @@ class MainScreenBloc extends Bloc<MainScreenEvent, MainScreenState> {
       } else {
         emit(state.copyWith(
             selected_place_details: FailedPlaceDetailsStatus(request.error!)));
+      }
+    });
+
+    //get directions for start and end positions
+    on<GetRouteDirectionEvent>((event, emit) async {
+      emit(state.copyWith(selected_place_details: LoadingPlaceDetailsStatus()));
+      RequestStatus request = await mainScreenRepository.getDirections(
+          event.startPosition, event.endPosition);
+      if (request is SuccessRequest) {
+        emit(state.copyWith(
+            route_direction: CompleteDirectionsStatus(request.response)));
+      } else {
+        emit(state.copyWith(
+            route_direction: FailedDirectionsStatus(request.error!)));
       }
     });
   }

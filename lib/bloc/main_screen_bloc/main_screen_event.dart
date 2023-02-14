@@ -30,3 +30,10 @@ class GetSelectedPlaceDetailsEvent extends MainScreenEvent {
   final String placeId;
   GetSelectedPlaceDetailsEvent({required this.placeId});
 }
+
+class GetRouteDirectionEvent extends MainScreenEvent {
+  final LatLng startPosition;
+  final LatLng endPosition;
+  GetRouteDirectionEvent(
+      {required this.startPosition, required this.endPosition});
+}

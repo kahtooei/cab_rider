@@ -1,15 +1,19 @@
 import 'dart:convert';
 
+import 'package:cab_rider/data/remote/directions_api.dart';
 import 'package:cab_rider/data/remote/geocoding.dart';
 import 'package:cab_rider/data/remote/places_api.dart';
 import 'package:cab_rider/repository/models/address.dart';
+import 'package:cab_rider/repository/models/direction.dart';
 import 'package:cab_rider/repository/models/prediction.dart';
 import 'package:cab_rider/shared/resources/request_status.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MainScreenRepository {
   GoogleGeoCoding geoCoding;
   GooglePlaceAPI placeAPI;
-  MainScreenRepository(this.geoCoding, this.placeAPI);
+  GoogleDirectionsAPI directionsAPI;
+  MainScreenRepository(this.geoCoding, this.placeAPI, this.directionsAPI);
   Future<RequestStatus<AddressModel>> getAddressWithPosition(
       double longitude, double latitude) async {
     try {
@@ -87,6 +91,33 @@ class MainScreenRepository {
       }
     } catch (e) {
       return FailedRequest<AddressModel>(e.toString());
+    }
+  }
+
+  Future<RequestStatus<DirectionModel>> getDirections(
+      LatLng startPosition, LatLng endPosition) async {
+    try {
+      var res = await directionsAPI.getDirections(startPosition, endPosition);
+      if (res == '') {
+        return FailedRequest<DirectionModel>('request error');
+      } else {
+        Map data = jsonDecode(res);
+        DirectionModel direction = DirectionModel();
+        direction.distanceText =
+            data['routes'][0]['legs'][0]['distance']['text'];
+        direction.distanceValue =
+            data['routes'][0]['legs'][0]['distance']['value'];
+        direction.durationText =
+            data['routes'][0]['legs'][0]['duration']['text'];
+        direction.durationValue =
+            data['routes'][0]['legs'][0]['duration']['value'];
+        direction.encodedPoints =
+            data['routes'][0]['overview_polyline']['points'];
+
+        return SuccessRequest<DirectionModel>(direction);
+      }
+    } catch (e) {
+      return FailedRequest<DirectionModel>(e.toString());
     }
   }
 }
