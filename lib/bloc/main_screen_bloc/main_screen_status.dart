@@ -50,6 +50,8 @@ class CompletePlaceDetailsStatus extends PlaceDetailsStatus {
 //get directions for selected start and end positions
 class DirectionsStatus {}
 
+class EmptyDirectionsStatus extends DirectionsStatus {}
+
 class LoadingDirectionsStatus extends DirectionsStatus {}
 
 class FailedDirectionsStatus extends DirectionsStatus {

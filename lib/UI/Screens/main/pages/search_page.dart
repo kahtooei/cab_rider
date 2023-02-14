@@ -1,9 +1,12 @@
 import 'package:cab_rider/UI/Screens/main/widgets/prediction_list_item.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_bloc.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_status.dart';
+import 'package:cab_rider/repository/models/address.dart';
 import 'package:cab_rider/shared/utils/colors.dart';
+import 'package:cab_rider/shared/widgets/progress_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class SearchPage extends StatelessWidget {
   SearchPage({super.key});
@@ -141,8 +144,9 @@ class SearchPage extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: BlocBuilder<MainScreenBloc, MainScreenState>(
+              child: BlocConsumer<MainScreenBloc, MainScreenState>(
                 builder: (context, state) {
+                  print("#### RUN BUILDER ####");
                   switch (state.predictionsList.runtimeType) {
                     case LoadingPredictionsStatus:
                       return const Center(
@@ -166,6 +170,47 @@ class SearchPage extends StatelessWidget {
                       );
                     default:
                       return Container();
+                  }
+                },
+                listener: (context, state) {
+                  print("#### RUN LISTENER ####");
+                  if (state.selectedPlaceDetails.runtimeType ==
+                          CompletePlaceDetailsStatus &&
+                      state.currentPosition.runtimeType ==
+                          CompleteMainScreenStatus) {
+                    print("===FIRST-IF===");
+                    if (state.routeDirection.runtimeType ==
+                        CompleteDirectionsStatus) {
+                      print("--------------------");
+                      print("DIRECTION COMPLETED");
+                      print("--------------------");
+                      Navigator.pop(context);
+                      Navigator.pop(context);
+                    } else if (state.routeDirection.runtimeType ==
+                        EmptyDirectionsStatus) {
+                      print("++++++++++++++++++++");
+                      print("GET DIRECTION");
+                      print("++++++++++++++++++++");
+                      showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) =>
+                              const ProgressDialog("Get Direction..."));
+                      AddressModel start =
+                          (state.currentPosition as CompleteMainScreenStatus)
+                              .address;
+                      AddressModel end = (state.selectedPlaceDetails
+                              as CompletePlaceDetailsStatus)
+                          .placeDetails;
+                      BlocProvider.of<MainScreenBloc>(context).add(
+                          GetRouteDirectionEvent(
+                              startPosition:
+                                  LatLng(start.latitude!, start.longitude!),
+                              endPosition:
+                                  LatLng(end.latitude!, end.longitude!)));
+                    } else {}
+                  } else {
+                    print("===SECOND-IF===");
                   }
                 },
               ),

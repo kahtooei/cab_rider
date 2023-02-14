@@ -4,6 +4,7 @@ import 'package:cab_rider/bloc/main_screen_bloc/main_screen_status.dart';
 import 'package:cab_rider/shared/utils/page_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
@@ -26,8 +27,9 @@ class _MainScreenState extends State<MainScreen> {
     target: LatLng(37.42796133580664, -122.085749655962),
     zoom: 14.4746,
   );
-
   late Position _currentPosition;
+  List<LatLng> _points = [];
+  Set<Polyline> _polylines = {};
 
   @override
   void initState() {
@@ -62,6 +64,7 @@ class _MainScreenState extends State<MainScreen> {
             myLocationEnabled: true,
             zoomGesturesEnabled: true,
             zoomControlsEnabled: true,
+            polylines: _polylines,
             initialCameraPosition: _kGooglePlex,
             onMapCreated: (GoogleMapController controller) {
               _controller.complete(controller);
@@ -212,6 +215,45 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                 ),
               )),
+          BlocListener<MainScreenBloc, MainScreenState>(
+            listenWhen: (previous, current) {
+              if (current.routeDirection.runtimeType ==
+                  CompleteDirectionsStatus) {
+                return true;
+              }
+              return false;
+            },
+            listener: (context, state) {
+              _points.clear();
+              _polylines.clear();
+              if (state.routeDirection.runtimeType ==
+                  CompleteDirectionsStatus) {
+                String encoded_points =
+                    (state.routeDirection as CompleteDirectionsStatus)
+                        .direction
+                        .encodedPoints!;
+                PolylinePoints polylinePoints = PolylinePoints();
+                List<PointLatLng> result =
+                    polylinePoints.decodePolyline(encoded_points);
+                for (PointLatLng point in result) {
+                  _points.add(LatLng(point.latitude, point.longitude));
+                }
+                Polyline polyline = Polyline(
+                  polylineId: PolylineId('id'),
+                  color: Colors.blue,
+                  points: _points,
+                  width: 4,
+                  jointType: JointType.round,
+                  startCap: Cap.roundCap,
+                  endCap: Cap.roundCap,
+                  geodesic: true,
+                );
+                _polylines.add(polyline);
+              }
+              setState(() {});
+            },
+            child: Container(),
+          ),
         ],
       ),
     );
