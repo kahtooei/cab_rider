@@ -80,19 +80,25 @@ class MainScreenBloc extends Bloc<MainScreenEvent, MainScreenState> {
 
     //get directions for start and end positions
     on<GetRouteDirectionEvent>((event, emit) async {
-      print("**** START ****");
       emit(state.copyWith(route_direction: LoadingDirectionsStatus()));
       RequestStatus request = await mainScreenRepository.getDirections(
           event.startPosition, event.endPosition);
       if (request is SuccessRequest) {
-        print("**** SUCCESS ****");
         emit(state.copyWith(
             route_direction: CompleteDirectionsStatus(request.response)));
       } else {
-        print("**** ERROR ****");
         emit(state.copyWith(
             route_direction: FailedDirectionsStatus(request.error!)));
       }
+    });
+
+    //reset app after click arrow back button
+    on<ResetAppEvent>((event, emit) async {
+      emit(state.copyWith(
+          current_position: LoadingMainScreenStatus(),
+          predictions_list: CompletePredictionsStatus([]),
+          selected_place_details: LoadingPlaceDetailsStatus(),
+          route_direction: EmptyDirectionsStatus()));
     });
   }
 }

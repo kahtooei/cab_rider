@@ -1,8 +1,11 @@
+// ignore_for_file: prefer_final_fields
+
 import 'package:cab_rider/UI/Screens/main/widgets/drawer_widget.dart';
 import 'package:cab_rider/UI/widgets/my_custom_buttom.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_bloc.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_status.dart';
 import 'package:cab_rider/repository/models/address.dart';
+import 'package:cab_rider/repository/models/direction.dart';
 import 'package:cab_rider/shared/utils/colors.dart';
 import 'package:cab_rider/shared/utils/page_routes.dart';
 import 'package:flutter/material.dart';
@@ -20,9 +23,14 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   double mapPadding = 350;
+  bool isEstimateState = false;
+  double searchPanelHeight =
+      300; // first panel show by default and hide after get directions
+  double estimatePanelHeight =
+      0; // this panel show after directions with height 250
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
   late final GoogleMapController mapController;
@@ -36,6 +44,8 @@ class _MainScreenState extends State<MainScreen> {
   Set<Polyline> _polylines = {};
   Set<Marker> _markers = {};
   Set<Circle> _circles = {};
+
+  Map<String, dynamic> estimateDetailsData = {};
 
   @override
   void initState() {
@@ -88,109 +98,114 @@ class _MainScreenState extends State<MainScreen> {
             bottom: 0,
             right: 0,
             left: 0,
-            child: Container(
-              height: 300,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(15),
-                    topRight: Radius.circular(15)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black45,
-                    blurRadius: 15,
-                    spreadRadius: 0.8,
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Nice to see you",
-                      style: TextStyle(fontSize: 12),
-                    ),
-                    const Text(
-                      "Where are you going?",
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, PagesRouteData.searchPage);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 15),
-                        decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(5),
-                            boxShadow: const [
-                              BoxShadow(
-                                  blurRadius: 4,
-                                  spreadRadius: 0.5,
-                                  color: Colors.black26)
-                            ]),
-                        child: Row(
-                          children: const [
-                            Icon(
-                              Icons.search,
-                              color: Colors.black54,
-                            ),
-                            SizedBox(
-                              width: 30,
-                            ),
-                            Text(
-                              "Search Destination",
-                              style: TextStyle(fontSize: 16),
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 15,
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.home),
-                      // title: const Text("Add Home"),
-                      title: BlocBuilder<MainScreenBloc, MainScreenState>(
-                        builder: (context, state) {
-                          switch (state.currentPosition.runtimeType) {
-                            case LoadingMainScreenStatus:
-                              return const Text("Add Home");
-                            case FailedMainScreenStatus:
-                              return const Text("Failed Get Home");
-                            case CompleteMainScreenStatus:
-                              return Text((state.currentPosition
-                                      as CompleteMainScreenStatus)
-                                  .address
-                                  .placeFormattedAddress!);
-                            default:
-                              return const Text("");
-                          }
-                        },
-                      ),
-                      subtitle: const Text("Your residential address"),
-                      onTap: () {},
-                    ),
-                    const Divider(
-                      color: Colors.black38,
-                      height: 1,
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.work),
-                      title: const Text("Add Work"),
-                      subtitle: const Text("Your office address"),
-                      onTap: () {},
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeIn,
+              child: Container(
+                height: searchPanelHeight,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(15),
+                      topRight: Radius.circular(15)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black45,
+                      blurRadius: 15,
+                      spreadRadius: 0.8,
                     ),
                   ],
+                ),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Nice to see you",
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      const Text(
+                        "Where are you going?",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(
+                              context, PagesRouteData.searchPage);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 15),
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(5),
+                              boxShadow: const [
+                                BoxShadow(
+                                    blurRadius: 4,
+                                    spreadRadius: 0.5,
+                                    color: Colors.black26)
+                              ]),
+                          child: Row(
+                            children: const [
+                              Icon(
+                                Icons.search,
+                                color: Colors.black54,
+                              ),
+                              SizedBox(
+                                width: 30,
+                              ),
+                              Text(
+                                "Search Destination",
+                                style: TextStyle(fontSize: 16),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 15,
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.home),
+                        // title: const Text("Add Home"),
+                        title: BlocBuilder<MainScreenBloc, MainScreenState>(
+                          builder: (context, state) {
+                            switch (state.currentPosition.runtimeType) {
+                              case LoadingMainScreenStatus:
+                                return const Text("Add Home");
+                              case FailedMainScreenStatus:
+                                return const Text("Failed Get Home");
+                              case CompleteMainScreenStatus:
+                                return Text((state.currentPosition
+                                        as CompleteMainScreenStatus)
+                                    .address
+                                    .placeFormattedAddress!);
+                              default:
+                                return const Text("");
+                            }
+                          },
+                        ),
+                        subtitle: const Text("Your residential address"),
+                        onTap: () {},
+                      ),
+                      const Divider(
+                        color: Colors.black38,
+                        height: 1,
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.work),
+                        title: const Text("Add Work"),
+                        subtitle: const Text("Your office address"),
+                        onTap: () {},
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -200,7 +215,9 @@ class _MainScreenState extends State<MainScreen> {
               left: 20,
               child: GestureDetector(
                 onTap: () {
-                  scaffoldKey.currentState!.openDrawer();
+                  isEstimateState
+                      ? resetApp()
+                      : scaffoldKey.currentState!.openDrawer();
                 },
                 child: Container(
                   height: 40,
@@ -214,10 +231,10 @@ class _MainScreenState extends State<MainScreen> {
                             spreadRadius: 0.5,
                             color: Colors.black54)
                       ]),
-                  child: const CircleAvatar(
+                  child: CircleAvatar(
                     backgroundColor: Colors.white,
                     child: Icon(
-                      Icons.menu,
+                      isEstimateState ? Icons.arrow_back : Icons.menu,
                       color: Colors.black87,
                     ),
                   ),
@@ -236,13 +253,14 @@ class _MainScreenState extends State<MainScreen> {
               _polylines.clear();
               _markers.clear();
               _circles.clear();
+              estimateDetailsData = {};
               if (state.routeDirection.runtimeType ==
                   CompleteDirectionsStatus) {
                 //update polyline for current directions
-                String encoded_points =
+                DirectionModel direction =
                     (state.routeDirection as CompleteDirectionsStatus)
-                        .direction
-                        .encodedPoints!;
+                        .direction;
+                String encoded_points = direction.encodedPoints!;
                 PolylinePoints polylinePoints = PolylinePoints();
                 List<PointLatLng> result =
                     polylinePoints.decodePolyline(encoded_points);
@@ -312,6 +330,12 @@ class _MainScreenState extends State<MainScreen> {
 
                 _circles.add(startCircle);
                 _circles.add(endCircle);
+
+                //show estimate panel
+                estimatePanelHeight = 250;
+                searchPanelHeight = 0;
+                isEstimateState = true;
+                setEstimateData(direction);
               }
 
               setState(() {});
@@ -322,99 +346,104 @@ class _MainScreenState extends State<MainScreen> {
               bottom: 0,
               right: 0,
               left: 0,
-              child: Container(
-                height: 250,
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(10),
-                        topRight: Radius.circular(10)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black38,
-                        blurRadius: 5,
-                        spreadRadius: 0.5,
+              child: AnimatedSize(
+                curve: Curves.easeIn,
+                duration: const Duration(milliseconds: 150),
+                child: Container(
+                  height: estimatePanelHeight,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(10),
+                          topRight: Radius.circular(10)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black38,
+                          blurRadius: 5,
+                          spreadRadius: 0.5,
+                        )
+                      ]),
+                  child: Column(
+                    children: [
+                      Container(
+                        decoration:
+                            const BoxDecoration(color: MyColors.colorAccent1),
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                        margin: const EdgeInsets.only(top: 15, bottom: 20),
+                        child: Row(
+                          children: [
+                            Image.asset(
+                              "assets/images/taxi.png",
+                              width: 70,
+                              height: 70,
+                            ),
+                            const SizedBox(
+                              width: 15,
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Taxi",
+                                  style: TextStyle(fontSize: 18),
+                                ),
+                                Text(
+                                  estimateDetailsData['distance'] ?? '',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      color: MyColors.colorTextLight),
+                                )
+                              ],
+                            ),
+                            Expanded(child: Container()),
+                            Text(
+                              "\$${estimateDetailsData['cost'] ?? ''}",
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 15),
+                        child: Row(
+                          children: const [
+                            Icon(
+                              FontAwesomeIcons.moneyBill,
+                              size: 18,
+                              color: MyColors.colorTextLight,
+                            ),
+                            SizedBox(
+                              width: 15,
+                            ),
+                            Text(
+                              "Cash",
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            SizedBox(
+                              width: 5,
+                            ),
+                            Icon(
+                              Icons.keyboard_arrow_down,
+                              color: MyColors.colorTextLight,
+                              size: 15,
+                            )
+                          ],
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                        child: MyCustomButton(
+                          onPress: () {},
+                          title: "REQUEST CAB",
+                        ),
                       )
-                    ]),
-                child: Column(
-                  children: [
-                    Container(
-                      decoration:
-                          const BoxDecoration(color: MyColors.colorAccent1),
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      margin: const EdgeInsets.only(top: 15, bottom: 20),
-                      child: Row(
-                        children: [
-                          Image.asset(
-                            "assets/images/taxi.png",
-                            width: 70,
-                            height: 70,
-                          ),
-                          const SizedBox(
-                            width: 15,
-                          ),
-                          Column(
-                            children: const [
-                              Text(
-                                "Taxi",
-                                style: TextStyle(fontSize: 18),
-                              ),
-                              Text(
-                                "14Km",
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    color: MyColors.colorTextLight),
-                              )
-                            ],
-                          ),
-                          Expanded(child: Container()),
-                          const Text(
-                            "\$13",
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 15),
-                      child: Row(
-                        children: const [
-                          Icon(
-                            FontAwesomeIcons.moneyBill,
-                            size: 18,
-                            color: MyColors.colorTextLight,
-                          ),
-                          SizedBox(
-                            width: 15,
-                          ),
-                          Text(
-                            "Cash",
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          SizedBox(
-                            width: 5,
-                          ),
-                          Icon(
-                            Icons.keyboard_arrow_down,
-                            color: MyColors.colorTextLight,
-                            size: 15,
-                          )
-                        ],
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: MyCustomButton(
-                        onPress: () {},
-                        title: "REQUEST CAB",
-                      ),
-                    )
-                  ],
+                    ],
+                  ),
                 ),
               )),
         ],
@@ -453,5 +482,32 @@ class _MainScreenState extends State<MainScreen> {
           latitude: _currentPosition.latitude,
           longitude: _currentPosition.longitude));
     } catch (e) {}
+  }
+
+  void setEstimateData(DirectionModel direction) {
+    // $0.3 : per KM
+    // $0.2 : per Minute
+    // #3.0 : base
+    double perMin = (direction.durationValue! / 60) * 0.2;
+    double perKM = (direction.distanceValue! / 1000) * 0.3;
+    int total = (perMin + perKM + 3).truncate();
+    estimateDetailsData = {
+      'distance': direction.distanceText,
+      'duration': direction.durationText,
+      'cost': total
+    };
+  }
+
+  resetApp() {
+    _points.clear();
+    _polylines.clear();
+    _markers.clear();
+    _circles.clear();
+    estimateDetailsData = {};
+    BlocProvider.of<MainScreenBloc>(context).add(ResetAppEvent());
+    estimatePanelHeight = 0;
+    searchPanelHeight = 300;
+    setState(() {});
+    setCurrentPosition();
   }
 }

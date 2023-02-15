@@ -37,3 +37,7 @@ class GetRouteDirectionEvent extends MainScreenEvent {
   GetRouteDirectionEvent(
       {required this.startPosition, required this.endPosition});
 }
+
+class ResetAppEvent extends MainScreenEvent {
+  ResetAppEvent();
+}
