@@ -1,4 +1,5 @@
 import 'package:cab_rider/UI/Screens/main/widgets/drawer_widget.dart';
+import 'package:cab_rider/UI/widgets/my_custom_buttom.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_bloc.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_status.dart';
 import 'package:cab_rider/repository/models/address.dart';
@@ -7,6 +8,7 @@ import 'package:cab_rider/shared/utils/page_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
@@ -316,6 +318,105 @@ class _MainScreenState extends State<MainScreen> {
             },
             child: Container(),
           ),
+          Positioned(
+              bottom: 0,
+              right: 0,
+              left: 0,
+              child: Container(
+                height: 250,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(10),
+                        topRight: Radius.circular(10)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black38,
+                        blurRadius: 5,
+                        spreadRadius: 0.5,
+                      )
+                    ]),
+                child: Column(
+                  children: [
+                    Container(
+                      decoration:
+                          const BoxDecoration(color: MyColors.colorAccent1),
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      margin: const EdgeInsets.only(top: 15, bottom: 20),
+                      child: Row(
+                        children: [
+                          Image.asset(
+                            "assets/images/taxi.png",
+                            width: 70,
+                            height: 70,
+                          ),
+                          const SizedBox(
+                            width: 15,
+                          ),
+                          Column(
+                            children: const [
+                              Text(
+                                "Taxi",
+                                style: TextStyle(fontSize: 18),
+                              ),
+                              Text(
+                                "14Km",
+                                style: TextStyle(
+                                    fontSize: 18,
+                                    color: MyColors.colorTextLight),
+                              )
+                            ],
+                          ),
+                          Expanded(child: Container()),
+                          const Text(
+                            "\$13",
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 15),
+                      child: Row(
+                        children: const [
+                          Icon(
+                            FontAwesomeIcons.moneyBill,
+                            size: 18,
+                            color: MyColors.colorTextLight,
+                          ),
+                          SizedBox(
+                            width: 15,
+                          ),
+                          Text(
+                            "Cash",
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          SizedBox(
+                            width: 5,
+                          ),
+                          Icon(
+                            Icons.keyboard_arrow_down,
+                            color: MyColors.colorTextLight,
+                            size: 15,
+                          )
+                        ],
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: MyCustomButton(
+                        onPress: () {},
+                        title: "REQUEST CAB",
+                      ),
+                    )
+                  ],
+                ),
+              )),
         ],
       ),
     );

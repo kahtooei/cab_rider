@@ -1,6 +1,7 @@
+import 'package:cab_rider/UI/widgets/my_custom_buttom.dart';
 import 'package:cab_rider/shared/utils/colors.dart';
 import 'package:cab_rider/shared/utils/page_routes.dart';
-import 'package:cab_rider/shared/widgets/progress_dialog.dart';
+import 'package:cab_rider/UI/widgets/progress_dialog.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -101,26 +102,9 @@ class RegisterScreen extends StatelessWidget {
                       const SizedBox(
                         height: 50,
                       ),
-                      SizedBox(
-                        height: 50,
-                        width: MediaQuery.of(context).size.width,
-                        child: ElevatedButton(
-                            onPressed: () {
-                              doRegister();
-                            },
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor: MyColors.colorGreen,
-                                foregroundColor: Colors.white,
-                                shape: const RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(25)))),
-                            child: const Text(
-                              "REGISTER",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold),
-                            )),
+                      MyCustomButton(
+                        onPress: doRegister,
+                        title: "REGISTER",
                       ),
                       const SizedBox(
                         height: 20,

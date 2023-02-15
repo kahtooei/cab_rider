@@ -3,7 +3,7 @@ import 'package:cab_rider/bloc/main_screen_bloc/main_screen_bloc.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_status.dart';
 import 'package:cab_rider/repository/models/address.dart';
 import 'package:cab_rider/shared/utils/colors.dart';
-import 'package:cab_rider/shared/widgets/progress_dialog.dart';
+import 'package:cab_rider/UI/widgets/progress_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -146,7 +146,6 @@ class SearchPage extends StatelessWidget {
             Expanded(
               child: BlocConsumer<MainScreenBloc, MainScreenState>(
                 builder: (context, state) {
-                  print("#### RUN BUILDER ####");
                   switch (state.predictionsList.runtimeType) {
                     case LoadingPredictionsStatus:
                       return const Center(
@@ -173,24 +172,16 @@ class SearchPage extends StatelessWidget {
                   }
                 },
                 listener: (context, state) {
-                  print("#### RUN LISTENER ####");
                   if (state.selectedPlaceDetails.runtimeType ==
                           CompletePlaceDetailsStatus &&
                       state.currentPosition.runtimeType ==
                           CompleteMainScreenStatus) {
-                    print("===FIRST-IF===");
                     if (state.routeDirection.runtimeType ==
                         CompleteDirectionsStatus) {
-                      print("--------------------");
-                      print("DIRECTION COMPLETED");
-                      print("--------------------");
                       Navigator.pop(context);
                       Navigator.pop(context);
                     } else if (state.routeDirection.runtimeType ==
                         EmptyDirectionsStatus) {
-                      print("++++++++++++++++++++");
-                      print("GET DIRECTION");
-                      print("++++++++++++++++++++");
                       showDialog(
                           context: context,
                           barrierDismissible: false,
@@ -209,9 +200,7 @@ class SearchPage extends StatelessWidget {
                               endPosition:
                                   LatLng(end.latitude!, end.longitude!)));
                     } else {}
-                  } else {
-                    print("===SECOND-IF===");
-                  }
+                  } else {}
                 },
               ),
             ),
