@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_final_fields
 
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:cab_rider/UI/Screens/main/widgets/drawer_widget.dart';
 import 'package:cab_rider/UI/widgets/my_custom_buttom.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_bloc.dart';
@@ -31,6 +32,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       300; // first panel show by default and hide after get directions
   double estimatePanelHeight =
       0; // this panel show after directions with height 250
+  double requestPanelHeight =
+      0; // this panel show after request a ride with height 200
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
   late final GoogleMapController mapController;
@@ -438,9 +441,78 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         child: MyCustomButton(
-                          onPress: () {},
+                          onPress: sendRequest,
                           title: "REQUEST CAB",
                         ),
+                      )
+                    ],
+                  ),
+                ),
+              )),
+          Positioned(
+              bottom: 0,
+              right: 0,
+              left: 0,
+              child: AnimatedSize(
+                curve: Curves.easeIn,
+                duration: const Duration(milliseconds: 150),
+                child: Container(
+                  height: requestPanelHeight,
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(10),
+                          topRight: Radius.circular(10)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black38,
+                          blurRadius: 5,
+                          spreadRadius: 0.5,
+                        )
+                      ]),
+                  child: Column(
+                    children: [
+                      const SizedBox(
+                        height: 15,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: TextLiquidFill(
+                            text: 'Requesting a Ride...',
+                            waveColor: MyColors.colorTextSemiLight,
+                            boxBackgroundColor: Colors.white,
+                            textStyle: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            boxHeight: 40.0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 40,
+                      ),
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(25),
+                            border:
+                                Border.all(color: Colors.black26, width: 1)),
+                        child: const Icon(Icons.close),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      const Text(
+                        "Cancel ride",
+                        style:
+                            TextStyle(color: MyColors.colorText, fontSize: 14),
                       )
                     ],
                   ),
@@ -496,6 +568,15 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       'duration': direction.durationText,
       'cost': total
     };
+  }
+
+  sendRequest() {
+    setState(() {
+      searchPanelHeight = 0;
+      estimatePanelHeight = 0;
+      requestPanelHeight = 200;
+      isEstimateState = false;
+    });
   }
 
   resetApp() {
