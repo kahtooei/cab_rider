@@ -7,6 +7,7 @@ import 'package:cab_rider/bloc/main_screen_bloc/main_screen_bloc.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_status.dart';
 import 'package:cab_rider/repository/models/address.dart';
 import 'package:cab_rider/repository/models/direction.dart';
+import 'package:cab_rider/shared/resources/user_data.dart';
 import 'package:cab_rider/shared/utils/colors.dart';
 import 'package:cab_rider/shared/utils/page_routes.dart';
 import 'package:flutter/material.dart';
@@ -496,15 +497,18 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       const SizedBox(
                         height: 40,
                       ),
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(25),
-                            border:
-                                Border.all(color: Colors.black26, width: 1)),
-                        child: const Icon(Icons.close),
+                      GestureDetector(
+                        onTap: () {},
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(25),
+                              border:
+                                  Border.all(color: Colors.black26, width: 1)),
+                          child: const Icon(Icons.close),
+                        ),
                       ),
                       const SizedBox(
                         height: 10,

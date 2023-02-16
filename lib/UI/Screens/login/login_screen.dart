@@ -9,6 +9,7 @@ import 'package:cab_rider/repository/main_screen_repository.dart';
 import 'package:cab_rider/repository/models/address.dart';
 import 'package:cab_rider/repository/models/prediction.dart';
 import 'package:cab_rider/shared/resources/request_status.dart';
+import 'package:cab_rider/shared/resources/user_data.dart';
 import 'package:cab_rider/shared/utils/colors.dart';
 import 'package:cab_rider/shared/utils/page_routes.dart';
 import 'package:cab_rider/UI/widgets/progress_dialog.dart';
@@ -139,8 +140,14 @@ class LoginScreen extends StatelessWidget {
         } else {
           DatabaseReference ref =
               FirebaseDatabase.instance.ref("user/${_user.user!.uid}");
+
           ref.once().then((DatabaseEvent dbEvent) {
             if (dbEvent.snapshot.value != null) {
+              Map data = dbEvent.snapshot.value as Map;
+              UserData user = UserData();
+              user.email = data['email'];
+              user.fullName = data['fullName'];
+              user.phone = data['phone'];
               Navigator.pushNamedAndRemoveUntil(
                   _context, PagesRouteData.mainPage, (route) => false);
             } else {

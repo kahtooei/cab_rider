@@ -3,6 +3,7 @@ import 'package:cab_rider/data/remote/directions_api.dart';
 import 'package:cab_rider/data/remote/geocoding.dart';
 import 'package:cab_rider/data/remote/places_api.dart';
 import 'package:cab_rider/repository/main_screen_repository.dart';
+import 'package:cab_rider/shared/resources/user_data.dart';
 import 'package:get_it/get_it.dart';
 
 GetIt getIt = GetIt.instance;
