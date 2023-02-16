@@ -1,6 +1,7 @@
 import 'package:cab_rider/repository/models/address.dart';
 import 'package:cab_rider/repository/models/direction.dart';
 import 'package:cab_rider/repository/models/prediction.dart';
+import 'package:cab_rider/repository/models/request.dart';
 
 class MainScreenStatus {}
 
@@ -62,4 +63,21 @@ class FailedDirectionsStatus extends DirectionsStatus {
 class CompleteDirectionsStatus extends DirectionsStatus {
   final DirectionModel direction;
   CompleteDirectionsStatus(this.direction);
+}
+
+//add new rider request
+class RiderRequestStatus {}
+
+class EmptyRiderRequestStatus extends RiderRequestStatus {}
+
+class LoadingRiderRequestStatus extends RiderRequestStatus {}
+
+class FailedRiderRequestStatus extends RiderRequestStatus {
+  final String error;
+  FailedRiderRequestStatus(this.error);
+}
+
+class CompleteRiderRequestStatus extends RiderRequestStatus {
+  final RequestModel request;
+  CompleteRiderRequestStatus(this.request);
 }

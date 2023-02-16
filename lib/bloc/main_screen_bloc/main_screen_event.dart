@@ -41,3 +41,11 @@ class GetRouteDirectionEvent extends MainScreenEvent {
 class ResetAppEvent extends MainScreenEvent {
   ResetAppEvent();
 }
+
+class SendRiderRequestEvent extends MainScreenEvent {
+  SendRiderRequestEvent();
+}
+
+class RemoveRiderRequestEvent extends MainScreenEvent {
+  RemoveRiderRequestEvent();
+}

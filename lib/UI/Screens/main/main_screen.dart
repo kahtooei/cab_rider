@@ -10,6 +10,8 @@ import 'package:cab_rider/repository/models/direction.dart';
 import 'package:cab_rider/shared/resources/user_data.dart';
 import 'package:cab_rider/shared/utils/colors.dart';
 import 'package:cab_rider/shared/utils/page_routes.dart';
+import 'package:cab_rider/shared/utils/show_snackbar.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -247,7 +249,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           BlocListener<MainScreenBloc, MainScreenState>(
             listenWhen: (previous, current) {
               if (current.routeDirection.runtimeType ==
-                  CompleteDirectionsStatus) {
+                      CompleteDirectionsStatus &&
+                  current.riderRequest.runtimeType == EmptyRiderRequestStatus) {
                 return true;
               }
               return false;
@@ -457,69 +460,114 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               child: AnimatedSize(
                 curve: Curves.easeIn,
                 duration: const Duration(milliseconds: 150),
-                child: Container(
-                  height: requestPanelHeight,
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(10),
-                          topRight: Radius.circular(10)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black38,
-                          blurRadius: 5,
-                          spreadRadius: 0.5,
-                        )
-                      ]),
-                  child: Column(
-                    children: [
-                      const SizedBox(
-                        height: 15,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: TextLiquidFill(
-                            text: 'Requesting a Ride...',
-                            waveColor: MyColors.colorTextSemiLight,
-                            boxBackgroundColor: Colors.white,
-                            textStyle: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            boxHeight: 40.0,
+                child: BlocConsumer<MainScreenBloc, MainScreenState>(
+                  buildWhen: (previous, current) {
+                    if (previous.riderRequest.runtimeType ==
+                        current.riderRequest.runtimeType) {
+                      return false;
+                    }
+                    return true;
+                  },
+                  listenWhen: (previous, current) {
+                    if (previous.riderRequest.runtimeType ==
+                        current.riderRequest.runtimeType) {
+                      return false;
+                    }
+                    return true;
+                  },
+                  listener: (context, state) {
+                    if (state.riderRequest.runtimeType ==
+                        EmptyRiderRequestStatus) {
+                      cancelRequest();
+                    } else if (state.riderRequest.runtimeType ==
+                        FailedRiderRequestStatus) {
+                      showSnackBar(
+                          (state.riderRequest as FailedRiderRequestStatus)
+                              .error,
+                          context);
+                      cancelRequest();
+                    }
+                  },
+                  builder: (context, state) {
+                    String message = "";
+                    message = state.riderRequest.runtimeType ==
+                            CompleteRiderRequestStatus
+                        ? "Requesting a Ride..."
+                        : state.riderRequest.runtimeType ==
+                                LoadingRiderRequestStatus
+                            ? "Sending a Request..."
+                            : state.riderRequest.runtimeType ==
+                                    FailedRiderRequestStatus
+                                ? "Error In Sending Request!!!"
+                                : "No Request!!!";
+                    return Container(
+                      height: requestPanelHeight,
+                      width: double.infinity,
+                      decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(10),
+                              topRight: Radius.circular(10)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black38,
+                              blurRadius: 5,
+                              spreadRadius: 0.5,
+                            )
+                          ]),
+                      child: Column(
+                        children: [
+                          const SizedBox(
+                            height: 15,
                           ),
-                        ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: TextLiquidFill(
+                                text: 'Requesting a Ride...',
+                                waveColor: MyColors.colorTextSemiLight,
+                                boxBackgroundColor: Colors.white,
+                                textStyle: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20.0,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                boxHeight: 40.0,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 40,
+                          ),
+                          GestureDetector(
+                            onTap: () async {
+                              BlocProvider.of<MainScreenBloc>(context)
+                                  .add(RemoveRiderRequestEvent());
+                            },
+                            child: Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(25),
+                                  border: Border.all(
+                                      color: Colors.black26, width: 1)),
+                              child: const Icon(Icons.close),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          const Text(
+                            "Cancel ride",
+                            style: TextStyle(
+                                color: MyColors.colorText, fontSize: 14),
+                          )
+                        ],
                       ),
-                      const SizedBox(
-                        height: 40,
-                      ),
-                      GestureDetector(
-                        onTap: () {},
-                        child: Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(25),
-                              border:
-                                  Border.all(color: Colors.black26, width: 1)),
-                          child: const Icon(Icons.close),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      const Text(
-                        "Cancel ride",
-                        style:
-                            TextStyle(color: MyColors.colorText, fontSize: 14),
-                      )
-                    ],
-                  ),
+                    );
+                  },
                 ),
               )),
         ],
@@ -575,6 +623,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   }
 
   sendRequest() {
+    BlocProvider.of<MainScreenBloc>(context).add(SendRiderRequestEvent());
     setState(() {
       searchPanelHeight = 0;
       estimatePanelHeight = 0;
@@ -591,6 +640,19 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     estimateDetailsData = {};
     BlocProvider.of<MainScreenBloc>(context).add(ResetAppEvent());
     estimatePanelHeight = 0;
+    searchPanelHeight = 300;
+    setState(() {});
+    setCurrentPosition();
+  }
+
+  cancelRequest() {
+    _points.clear();
+    _polylines.clear();
+    _markers.clear();
+    _circles.clear();
+    estimateDetailsData = {};
+    estimatePanelHeight = 0;
+    requestPanelHeight = 0;
     searchPanelHeight = 300;
     setState(() {});
     setCurrentPosition();

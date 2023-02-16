@@ -1,7 +1,11 @@
 import 'package:bloc/bloc.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_status.dart';
 import 'package:cab_rider/repository/main_screen_repository.dart';
+import 'package:cab_rider/repository/models/address.dart';
+import 'package:cab_rider/repository/models/request.dart';
+import 'package:cab_rider/shared/params/ride_request_params.dart';
 import 'package:cab_rider/shared/resources/request_status.dart';
+import 'package:cab_rider/shared/resources/user_data.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:meta/meta.dart';
 
@@ -15,7 +19,8 @@ class MainScreenBloc extends Bloc<MainScreenEvent, MainScreenState> {
             currentPosition: LoadingMainScreenStatus(),
             predictionsList: CompletePredictionsStatus([]),
             selectedPlaceDetails: LoadingPlaceDetailsStatus(),
-            routeDirection: EmptyDirectionsStatus())) {
+            routeDirection: EmptyDirectionsStatus(),
+            riderRequest: EmptyRiderRequestStatus())) {
     //get current address
     on<GetCurrentAddressEvent>((event, emit) async {
       emit(state.copyWith(current_position: LoadingMainScreenStatus()));
@@ -98,7 +103,61 @@ class MainScreenBloc extends Bloc<MainScreenEvent, MainScreenState> {
           current_position: LoadingMainScreenStatus(),
           predictions_list: CompletePredictionsStatus([]),
           selected_place_details: LoadingPlaceDetailsStatus(),
-          route_direction: EmptyDirectionsStatus()));
+          route_direction: EmptyDirectionsStatus(),
+          rider_request: EmptyRiderRequestStatus()));
+    });
+
+    //send rider request
+    on<SendRiderRequestEvent>((event, emit) async {
+      emit(state.copyWith(rider_request: LoadingRiderRequestStatus()));
+      AddressModel start =
+          (state.currentPosition as CompleteMainScreenStatus).address;
+      AddressModel end =
+          (state.selectedPlaceDetails as CompletePlaceDetailsStatus)
+              .placeDetails;
+      UserData user = UserData();
+      RideRequestParams rideRequestParams = RideRequestParams();
+      rideRequestParams.driverId = user.id;
+      rideRequestParams.createAt = DateTime.now().toString();
+      rideRequestParams.riderName = user.fullName;
+      rideRequestParams.riderEmail = user.email;
+      rideRequestParams.riderPhone = user.phone;
+      rideRequestParams.pickupLocation = {
+        'latitude': start.latitude!,
+        'longitude': start.longitude!
+      };
+      rideRequestParams.destinationLocation = {
+        'latitude': end.latitude!,
+        'longitude': end.longitude!
+      };
+      rideRequestParams.paymentMethod = 'card';
+      rideRequestParams.driverId = 'waiting';
+      RequestStatus requestStatus =
+          await mainScreenRepository.newReqeustRider(rideRequestParams);
+      if (requestStatus is SuccessRequest) {
+        emit(state.copyWith(
+            rider_request: CompleteRiderRequestStatus(requestStatus.response)));
+      } else {
+        emit(state.copyWith(
+            rider_request: FailedRiderRequestStatus(requestStatus.error!)));
+      }
+    });
+
+    //remove ride request
+    on<RemoveRiderRequestEvent>((event, emit) async {
+      try {
+        String requestKey = (state.riderRequest as CompleteRiderRequestStatus)
+            .request
+            .requestKey!;
+        mainScreenRepository.removeRequestRider(requestKey);
+      } catch (e) {}
+
+      emit(state.copyWith(
+          current_position: LoadingMainScreenStatus(),
+          predictions_list: CompletePredictionsStatus([]),
+          selected_place_details: LoadingPlaceDetailsStatus(),
+          route_direction: EmptyDirectionsStatus(),
+          rider_request: EmptyRiderRequestStatus()));
     });
   }
 }

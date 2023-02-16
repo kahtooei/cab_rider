@@ -148,6 +148,7 @@ class LoginScreen extends StatelessWidget {
               user.email = data['email'];
               user.fullName = data['fullName'];
               user.phone = data['phone'];
+              user.id = _user.user!.uid;
               Navigator.pushNamedAndRemoveUntil(
                   _context, PagesRouteData.mainPage, (route) => false);
             } else {

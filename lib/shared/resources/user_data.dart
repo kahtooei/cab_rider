@@ -18,7 +18,7 @@ class UserData {
   get email => _email;
   set email(email) => _email = email;
 
-  get phone => _fullName;
+  get phone => _phone;
   set phone(phone) => _phone = phone;
 
   get fullName => _fullName;

@@ -1,11 +1,14 @@
 import 'dart:convert';
 
+import 'package:cab_rider/data/firebase/ride_request.dart';
 import 'package:cab_rider/data/remote/directions_api.dart';
 import 'package:cab_rider/data/remote/geocoding.dart';
 import 'package:cab_rider/data/remote/places_api.dart';
 import 'package:cab_rider/repository/models/address.dart';
 import 'package:cab_rider/repository/models/direction.dart';
 import 'package:cab_rider/repository/models/prediction.dart';
+import 'package:cab_rider/repository/models/request.dart';
+import 'package:cab_rider/shared/params/ride_request_params.dart';
 import 'package:cab_rider/shared/resources/request_status.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -13,7 +16,10 @@ class MainScreenRepository {
   GoogleGeoCoding geoCoding;
   GooglePlaceAPI placeAPI;
   GoogleDirectionsAPI directionsAPI;
-  MainScreenRepository(this.geoCoding, this.placeAPI, this.directionsAPI);
+  RideRequestFirebase riderRequest;
+  MainScreenRepository(
+      this.geoCoding, this.placeAPI, this.directionsAPI, this.riderRequest);
+
   Future<RequestStatus<AddressModel>> getAddressWithPosition(
       double longitude, double latitude) async {
     try {
@@ -119,5 +125,23 @@ class MainScreenRepository {
     } catch (e) {
       return FailedRequest<DirectionModel>(e.toString());
     }
+  }
+
+  Future<RequestStatus<RequestModel>> newReqeustRider(
+      RideRequestParams rideRequestParams) async {
+    try {
+      Map<String, dynamic> request =
+          await riderRequest.addNewRideRequest(rideRequestParams);
+      RequestModel requestModel = RequestModel.fromMap(request);
+      return SuccessRequest<RequestModel>(requestModel);
+    } catch (e) {
+      return FailedRequest<RequestModel>(e.toString());
+    }
+  }
+
+  Future<void> removeRequestRider(String requestKey) async {
+    try {
+      await riderRequest.removeRideRequest(requestKey);
+    } catch (e) {}
   }
 }
