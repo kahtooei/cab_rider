@@ -1,7 +1,9 @@
 import 'package:cab_rider/UI/widgets/my_custom_buttom.dart';
+import 'package:cab_rider/shared/resources/user_data.dart';
 import 'package:cab_rider/shared/utils/colors.dart';
 import 'package:cab_rider/shared/utils/page_routes.dart';
 import 'package:cab_rider/UI/widgets/progress_dialog.dart';
+import 'package:cab_rider/shared/utils/show_snackbar.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -141,7 +143,7 @@ class RegisterScreen extends StatelessWidget {
       try {
         if (!await checkConnectivity()) {
           Navigator.pop(_context);
-          showSnackBar("No Internet Connection");
+          showSnackBar("No Internet Connection", _context);
           return;
         }
         final credential =
@@ -157,22 +159,34 @@ class RegisterScreen extends StatelessWidget {
             "email": _txtEmailControlle.text,
             "phone": _txtPhoneControlle.text,
           });
-          // ignore: use_build_context_synchronously
-          Navigator.pushNamedAndRemoveUntil(
-              _context, PagesRouteData.mainPage, (route) => false);
+          ref.once().then((DatabaseEvent dbEvent) {
+            if (dbEvent.snapshot.value != null) {
+              Map data = dbEvent.snapshot.value as Map;
+              UserData user = UserData();
+              user.email = data['email'];
+              user.fullName = data['fullName'];
+              user.phone = data['phone'];
+              user.id = dbEvent.snapshot.key;
+              Navigator.pushNamedAndRemoveUntil(
+                  _context, PagesRouteData.mainPage, (route) => false);
+            } else {
+              Navigator.pop(_context);
+              showSnackBar("User Profile Data Not Found", _context);
+            }
+          });
         } else {
           Navigator.pop(_context);
         }
       } on FirebaseAuthException catch (e) {
         Navigator.pop(_context);
         if (e.code == 'weak-password') {
-          showSnackBar('The password provided is too weak.');
+          showSnackBar('The password provided is too weak.', _context);
         } else if (e.code == 'email-already-in-use') {
-          showSnackBar('The account already exists for that email.');
+          showSnackBar('The account already exists for that email.', _context);
         }
       } catch (e) {
         Navigator.pop(_context);
-        showSnackBar('Error...');
+        showSnackBar('Error...', _context);
       }
     } else {
       Navigator.pop(_context);
@@ -191,29 +205,22 @@ class RegisterScreen extends StatelessWidget {
 
   bool checkFields() {
     if (_txtFullnameControlle.text.length < 4) {
-      showSnackBar("Valid Fullname has more than 3 characters");
+      showSnackBar("Valid Fullname has more than 3 characters", _context);
       return false;
     }
     if (_txtEmailControlle.text.length < 6 ||
         !_txtEmailControlle.text.contains("@")) {
-      showSnackBar("Invalid Email Address");
+      showSnackBar("Invalid Email Address", _context);
       return false;
     }
     if (_txtPhoneControlle.text.length < 11) {
-      showSnackBar("Invalid Phone Number");
+      showSnackBar("Invalid Phone Number", _context);
       return false;
     }
     if (_txtPasswordControlle.text.length < 8) {
-      showSnackBar("Valid Password has more than 8 characters");
+      showSnackBar("Valid Password has more than 8 characters", _context);
       return false;
     }
     return true;
-  }
-
-  showSnackBar(String txt) {
-    var snackBar = SnackBar(
-      content: Text(txt),
-    );
-    ScaffoldMessenger.of(_context).showSnackBar(snackBar);
   }
 }

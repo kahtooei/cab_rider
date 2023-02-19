@@ -13,6 +13,7 @@ import 'package:cab_rider/shared/resources/user_data.dart';
 import 'package:cab_rider/shared/utils/colors.dart';
 import 'package:cab_rider/shared/utils/page_routes.dart';
 import 'package:cab_rider/UI/widgets/progress_dialog.dart';
+import 'package:cab_rider/shared/utils/show_snackbar.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -127,7 +128,7 @@ class LoginScreen extends StatelessWidget {
       try {
         if (!await checkConnectivity()) {
           Navigator.pop(_context);
-          showSnackBar("No Internet Connection");
+          showSnackBar("No Internet Connection", _context);
           return;
         }
         final _auth = FirebaseAuth.instance;
@@ -136,7 +137,7 @@ class LoginScreen extends StatelessWidget {
             password: _txtPasswordControlle.text);
         if (_user == null) {
           Navigator.pop(_context);
-          showSnackBar("Wrong Email or Password");
+          showSnackBar("Wrong Email or Password", _context);
         } else {
           DatabaseReference ref =
               FirebaseDatabase.instance.ref("user/${_user.user!.uid}");
@@ -153,7 +154,7 @@ class LoginScreen extends StatelessWidget {
                   _context, PagesRouteData.mainPage, (route) => false);
             } else {
               Navigator.pop(_context);
-              showSnackBar("User Profile Data Not Found");
+              showSnackBar("User Profile Data Not Found", _context);
             }
           });
         }
@@ -185,21 +186,14 @@ class LoginScreen extends StatelessWidget {
   bool checkFields() {
     if (_txtEmailControlle.text.length < 6 ||
         !_txtEmailControlle.text.contains("@")) {
-      showSnackBar("Invalid Email Address");
+      showSnackBar("Invalid Email Address", _context);
       return false;
     }
 
     if (_txtPasswordControlle.text.length < 8) {
-      showSnackBar("Valid Password has more than 8 characters");
+      showSnackBar("Valid Password has more than 8 characters", _context);
       return false;
     }
     return true;
-  }
-
-  showSnackBar(String txt) {
-    var snackBar = SnackBar(
-      content: Text(txt),
-    );
-    ScaffoldMessenger.of(_context).showSnackBar(snackBar);
   }
 }
