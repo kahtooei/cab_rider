@@ -14,6 +14,7 @@ import 'package:cab_rider/shared/utils/show_snackbar.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -605,6 +606,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       BlocProvider.of<MainScreenBloc>(context).add(GetCurrentAddressEvent(
           latitude: _currentPosition.latitude,
           longitude: _currentPosition.longitude));
+      getNearDrivers();
     } catch (e) {}
   }
 
@@ -656,5 +658,32 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     searchPanelHeight = 300;
     setState(() {});
     setCurrentPosition();
+  }
+
+  getNearDrivers() {
+    Geofire.initialize("driversAvailable");
+    Geofire.queryAtLocation(
+            _currentPosition.latitude, _currentPosition.longitude, 5)
+        ?.listen((map) {
+      if (map != null) {
+        var callBack = map['callBack'];
+        switch (callBack) {
+          case Geofire.onKeyEntered:
+            break;
+
+          case Geofire.onKeyExited:
+            break;
+
+          case Geofire.onKeyMoved:
+            // Update your key's location
+            break;
+
+          case Geofire.onGeoQueryReady:
+            // All Intial Data is loaded
+            print(map['result']);
+            break;
+        }
+      }
+    });
   }
 }
