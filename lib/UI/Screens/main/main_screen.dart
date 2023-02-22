@@ -1,5 +1,7 @@
 // ignore_for_file: prefer_final_fields
 
+import 'dart:math';
+
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:cab_rider/UI/Screens/main/widgets/drawer_widget.dart';
 import 'package:cab_rider/UI/widgets/my_custom_buttom.dart';
@@ -7,6 +9,7 @@ import 'package:cab_rider/bloc/main_screen_bloc/main_screen_bloc.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_status.dart';
 import 'package:cab_rider/repository/models/address.dart';
 import 'package:cab_rider/repository/models/direction.dart';
+import 'package:cab_rider/repository/models/nearby_driver.dart';
 import 'package:cab_rider/shared/resources/user_data.dart';
 import 'package:cab_rider/shared/utils/colors.dart';
 import 'package:cab_rider/shared/utils/page_routes.dart';
@@ -50,7 +53,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   List<LatLng> _points = [];
   Set<Polyline> _polylines = {};
   Set<Marker> _markers = {};
+  Set<Marker> _driverMarkers = {};
   Set<Circle> _circles = {};
+  BitmapDescriptor? nearbyIcon;
 
   Map<String, dynamic> estimateDetailsData = {};
 
@@ -58,6 +63,24 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     checkPermission();
+  }
+
+  createNearbyIcon() {
+    if (nearbyIcon == null) {
+      ImageConfiguration imageConfiguration =
+          createLocalImageConfiguration(context, size: const Size(2, 2));
+      BitmapDescriptor.fromAssetImage(
+              imageConfiguration, "assets/images/car_android.png")
+          .then((icon) {
+        nearbyIcon = icon;
+      });
+    }
+  }
+
+  @override
+  void dispose() async {
+    await Geofire.stopListener();
+    super.dispose();
   }
 
   checkPermission() async {
@@ -75,20 +98,21 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    createNearbyIcon();
     return Scaffold(
       key: scaffoldKey,
       drawer: const MyDrawerWidget(),
       body: Stack(
         children: [
           GoogleMap(
-            padding: EdgeInsets.only(bottom: mapPadding, top: 20),
+            padding: EdgeInsets.only(bottom: mapPadding, top: 40),
             mapType: MapType.normal,
             myLocationButtonEnabled: true,
             myLocationEnabled: true,
             zoomGesturesEnabled: true,
             zoomControlsEnabled: true,
             polylines: _polylines,
-            markers: _markers,
+            markers: _markers.union(_driverMarkers),
             circles: _circles,
             initialCameraPosition: _kGooglePlex,
             onMapCreated: (GoogleMapController controller) {
@@ -218,7 +242,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             ),
           ),
           Positioned(
-              top: 40,
+              top: 50,
               left: 20,
               child: GestureDetector(
                 onTap: () {
@@ -346,6 +370,28 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                 setEstimateData(direction);
               }
 
+              setState(() {});
+            },
+            child: Container(),
+          ),
+          BlocListener<MainScreenBloc, MainScreenState>(
+            listenWhen: (previous, current) {
+              if (current.nearbyDrivers == previous.nearbyDrivers) {
+                return false;
+              }
+              return true;
+            },
+            listener: (context, state) {
+              _driverMarkers.clear();
+              for (NearbyDriver driver in state.nearbyDrivers) {
+                _driverMarkers.add(Marker(
+                    markerId: MarkerId("driver-${driver.key}"),
+                    position: LatLng(driver.latitude!, driver.longitude!),
+                    icon: nearbyIcon ??
+                        BitmapDescriptor.defaultMarkerWithHue(
+                            BitmapDescriptor.hueAzure),
+                    rotation: Random().nextInt(360).toDouble()));
+              }
               setState(() {});
             },
             child: Container(),
@@ -660,27 +706,43 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     setCurrentPosition();
   }
 
-  getNearDrivers() {
-    Geofire.initialize("driversAvailable");
+  getNearDrivers() async {
+    await Geofire.initialize("driversAvailable");
     Geofire.queryAtLocation(
-            _currentPosition.latitude, _currentPosition.longitude, 5)
-        ?.listen((map) {
+            _currentPosition.latitude, _currentPosition.longitude, 100)!
+        .listen((map) {
       if (map != null) {
         var callBack = map['callBack'];
         switch (callBack) {
           case Geofire.onKeyEntered:
+            NearbyDriver driver = NearbyDriver(
+                key: map['key'],
+                latitude: map['latitude'],
+                longitude: map['longitude']);
+            BlocProvider.of<MainScreenBloc>(context)
+                .add(AddOrUpdateNearbyDriverEvent(driver));
             break;
 
           case Geofire.onKeyExited:
+            BlocProvider.of<MainScreenBloc>(context)
+                .add(RemoveNearbyDriverEvent(map['key']));
             break;
 
           case Geofire.onKeyMoved:
-            // Update your key's location
+            NearbyDriver driver = NearbyDriver(
+                key: map['key'],
+                latitude: map['latitude'],
+                longitude: map['longitude']);
+            BlocProvider.of<MainScreenBloc>(context)
+                .add(AddOrUpdateNearbyDriverEvent(driver));
             break;
 
           case Geofire.onGeoQueryReady:
             // All Intial Data is loaded
-            print(map['result']);
+            print("#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#");
+            print("#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#");
+            print("#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#@#");
+
             break;
         }
       }

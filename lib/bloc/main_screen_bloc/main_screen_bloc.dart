@@ -2,6 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:cab_rider/bloc/main_screen_bloc/main_screen_status.dart';
 import 'package:cab_rider/repository/main_screen_repository.dart';
 import 'package:cab_rider/repository/models/address.dart';
+import 'package:cab_rider/repository/models/nearby_driver.dart';
 import 'package:cab_rider/repository/models/request.dart';
 import 'package:cab_rider/shared/params/ride_request_params.dart';
 import 'package:cab_rider/shared/resources/request_status.dart';
@@ -20,7 +21,8 @@ class MainScreenBloc extends Bloc<MainScreenEvent, MainScreenState> {
             predictionsList: CompletePredictionsStatus([]),
             selectedPlaceDetails: LoadingPlaceDetailsStatus(),
             routeDirection: EmptyDirectionsStatus(),
-            riderRequest: EmptyRiderRequestStatus())) {
+            riderRequest: EmptyRiderRequestStatus(),
+            nearbyDrivers: [])) {
     //get current address
     on<GetCurrentAddressEvent>((event, emit) async {
       emit(state.copyWith(current_position: LoadingMainScreenStatus()));
@@ -158,6 +160,32 @@ class MainScreenBloc extends Bloc<MainScreenEvent, MainScreenState> {
           selected_place_details: LoadingPlaceDetailsStatus(),
           route_direction: EmptyDirectionsStatus(),
           rider_request: EmptyRiderRequestStatus()));
+    });
+
+    //add or update nearby driver
+    on<AddOrUpdateNearbyDriverEvent>((event, emit) async {
+      List<NearbyDriver> nearbyDrivers = state.nearbyDrivers + [];
+      int index = nearbyDrivers
+          .indexWhere((element) => element.key == event.driver.key);
+      if (index >= 0) {
+        nearbyDrivers[index].latitude = event.driver.latitude;
+        nearbyDrivers[index].longitude = event.driver.longitude;
+      } else {
+        nearbyDrivers.add(event.driver);
+      }
+
+      emit(state.copyWith(nearby_drivers: nearbyDrivers));
+    });
+
+    //remove nearby driver
+    on<RemoveNearbyDriverEvent>((event, emit) async {
+      List<NearbyDriver> nearbyDrivers = state.nearbyDrivers;
+      int index =
+          nearbyDrivers.indexWhere((element) => element.key == event.key);
+      if (index >= 0) {
+        nearbyDrivers.removeAt(index);
+      }
+      emit(state.copyWith(nearby_drivers: nearbyDrivers + []));
     });
   }
 }

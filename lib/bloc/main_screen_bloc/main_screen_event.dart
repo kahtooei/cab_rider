@@ -49,3 +49,13 @@ class SendRiderRequestEvent extends MainScreenEvent {
 class RemoveRiderRequestEvent extends MainScreenEvent {
   RemoveRiderRequestEvent();
 }
+
+class AddOrUpdateNearbyDriverEvent extends MainScreenEvent {
+  final NearbyDriver driver;
+  AddOrUpdateNearbyDriverEvent(this.driver);
+}
+
+class RemoveNearbyDriverEvent extends MainScreenEvent {
+  final String key;
+  RemoveNearbyDriverEvent(this.key);
+}
